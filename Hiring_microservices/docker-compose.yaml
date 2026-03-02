@@ -1,0 +1,134 @@
+version: "3.8"
+
+services:
+  db:
+    image: postgres:15
+    container_name: hiring-postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: Deepak@2005
+      POSTGRES_DB: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init-db.sh:/docker-entrypoint-initdb.d/init-db.sh
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - hiring-network
+
+  auth-service:
+    build:
+      context: .
+      args:
+        SERVICE_DIR: authservice
+    container_name: auth-service
+    ports:
+      - "8001:8001"
+    environment:
+      - DATABASE_URL=postgresql://postgres:Deepak%402005@db:5432/auth_db
+      - SECRET_KEY=supersecretkey123
+      - ALGORITHM=HS256
+      - ACCESS_TOKEN_EXPIRE_MINUTES=60
+      - PORT=8001
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: on-failure
+    networks:
+      - hiring-network
+
+  user-service:
+    build:
+      context: .
+      args:
+        SERVICE_DIR: userservice
+    container_name: user-service
+    ports:
+      - "8005:8005"
+    environment:
+      - DATABASE_URL=postgresql://postgres:Deepak%402005@db:5432/userdb
+      - SECRET_KEY=supersecretkey123
+      - ALGORITHM=HS256
+      - ACCESS_TOKEN_EXPIRE_MINUTES=60
+      - PORT=8005
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: on-failure
+    networks:
+      - hiring-network
+
+  company-service:
+    build:
+      context: .
+      args:
+        SERVICE_DIR: companyservice
+    container_name: company-service
+    ports:
+      - "8005:8005"
+    environment:
+      - DATABASE_URL=postgresql://postgres:Deepak%402005@db:5432/companydb
+      - SECRET_KEY=supersecretkey123
+      - ALGORITHM=HS256
+      - ACCESS_TOKEN_EXPIRE_MINUTES=60
+      - PORT=8005
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: on-failure
+    networks:
+      - hiring-network
+
+  job-service:
+    build:
+      context: .
+      args:
+        SERVICE_DIR: jobservice
+    container_name: job-service
+    ports:
+      - "8002:8002"
+    environment:
+      - DATABASE_URL=postgresql://postgres:Deepak%402005@db:5432/jobdb
+      - SECRET_KEY=supersecretkey123
+      - ALGORITHM=HS256
+      - ACCESS_TOKEN_EXPIRE_MINUTES=60
+      - PORT=8002
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: on-failure
+    networks:
+      - hiring-network
+
+  application-service:
+    build:
+      context: .
+      args:
+        SERVICE_DIR: applicationservice
+    container_name: application-service
+    ports:
+      - "8003:8003"
+    environment:
+      - DATABASE_URL=postgresql://postgres:Deepak%402005@db:5432/applicationdb
+      - SECRET_KEY=supersecretkey123
+      - ALGORITHM=HS256
+      - ACCESS_TOKEN_EXPIRE_MINUTES=60
+      - PORT=8003
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: on-failure
+    networks:
+      - hiring-network
+
+volumes:
+  postgres_data:
+
+networks:
+  hiring-network:
+    driver: bridge

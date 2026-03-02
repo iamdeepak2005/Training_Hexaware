@@ -1,0 +1,12 @@
+from sqlalchemy import Column, Integer, String
+from app.database.base import Base
+
+class Company(Base):
+    __tablename__ = "companies"
+
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String, nullable=False)
+    description = Column(String)
+
+    # identity reference (comes from JWT)
+    owner_user_id = Column(Integer, index=True)
